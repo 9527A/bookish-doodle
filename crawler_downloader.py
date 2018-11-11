@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import crawler_mongo
 # import json
 
 def download():#这里可以传入爬取第几页.待完成
@@ -14,13 +15,15 @@ def download():#这里可以传入爬取第几页.待完成
     
     items = soup.find_all('div', {'class': 'bookbox'})
     
-    for item in items:
+    for i,item in enumerate(items):
         novel={}
+        novel['id'] = i
         novel['name'] = item.find('div', {'class': 'bookname'}).text
-        novel['intro'] = item.find('div', {'class': 'bookintro'}).text
         novel['src'] = item.find('div', {'class': 'bookimg'}).find('img')['src']
         novels.append(novel)
         # print(novel['name'])
+    
+    crawler_mongo.data_seve(novels)
         
     return novels
     #这里调用数据库导入函数.待完成
