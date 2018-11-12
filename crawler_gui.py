@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import scrolledtext
 import crawler_downloader
 from PIL import Image,ImageTk
+import tkinter.messagebox as messagebox
 import crawler_mongo
 import requests
 import os
@@ -10,11 +11,29 @@ import os
 downloader = []
 
 def button_download():
-    t.delete(0.0,END)
-    global downloader
-    downloader = crawler_downloader.download()
-    # t.insert(INSERT, downloader)
-    t.insert(INSERT, '爬取完成')
+    # t.delete(0.0,END)
+    # global downloader
+    # number = crawler_downloader.download()
+    # # t.insert(INSERT, downloader)
+    # t.insert(INSERT, '爬取完成\n')
+    # t.insert(INSERT,'共取得'+str(number)+'页')
+    win_download = Toplevel(window)
+    win_download.title('爬虫')
+
+    def hitBegin():
+        if page.get() == '':
+            messagebox.showerror(title='错误', message='请输入要爬取的页数')
+        else:
+            crawler_downloader.download(int(page.get()))
+            t.insert(INSERT, '爬取完成\n')
+            t.insert(INSERT,'共取得'+str(page.get())+'页')
+            win_download.destroy()
+
+    page = StringVar()
+    Label(win_download, text='要爬取的页数:').grid(row=0, column=0)
+    Entry(win_download, textvariable=page).grid(row=1, column=0)
+    Button(win_download, text='开始', command=hitBegin).grid(row=1, column=1)
+    Text(win_download, width=30, height=7).grid(row=2, column=0 ,columnspan=2)
 
 def button_show():
     t.delete(0.0,END)
@@ -22,9 +41,10 @@ def button_show():
     for d in data:
         data_name=d['name']
         data_src=d['src']
+        data_intro = d['intro']
         t.insert(INSERT, data_name)
+        t.insert(INSERT, data_intro+'\n')
         t.insert(INSERT, data_src)
-#   t.insert(INSERT,m)
     
 def button_img(k):
     global Photo
@@ -32,9 +52,11 @@ def button_img(k):
     t.delete(0.0,END)
     data = crawler_mongo.data_get()
     d = data[k]
-    data_name=d['name']
-    data_src=d['src']   
+    data_name = d['name']
+    data_src = d['src']
+    data_intro = d['intro']   
     t.insert(INSERT, data_name)
+    t.insert(INSERT, data_intro)
     t.insert(INSERT, data_src)
 
     img_r = requests.get(d['src'])
@@ -46,14 +68,14 @@ def button_img(k):
     Photo =ImageTk.PhotoImage(image=img)
     c.create_image(0, 0, anchor='nw', image=Photo)
 
-#     else:
-#         t.insert(INSERT, '已存在'+d['src'])
 
 def button_next():
     global i
     i = i+1
     button_img(i)
 
+def button_delete():
+    crawler_mongo.delete()
 
 
 window = Tk()
@@ -84,5 +106,6 @@ Button(window, text='开始爬取', command=lambda:button_download()).grid(row=3
 Button(window, text='显示数据', command=lambda:button_show()).grid(row=3, column=1, sticky=W, pady=3)
 Button(window, text='显示图片', command=lambda:button_img(i)).grid(row=3, column=2, sticky=W, pady=3)
 Button(window, text='下一张图片', command=lambda:button_next()).grid(row=3, column=3, sticky=W, pady=3)
+Button(window, text='清除数据',  command=lambda:button_delete()).grid(row=3, column=4, sticky=W, pady=3)
 
 window.mainloop()
